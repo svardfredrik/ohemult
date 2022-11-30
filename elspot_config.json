@@ -1,0 +1,9 @@
+{
+  "backoff_start": 5,
+  "backoff_multiple": 2,
+  "backoff_stop": 3600,
+  "loglevel": "DEBUG",
+  "json_filename": "elspot.json",
+  "log_filename": "elspot.log",
+  "csv_filename": "elspot.csv"
+}
