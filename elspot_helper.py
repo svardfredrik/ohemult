@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 from datetime import datetime, timedelta, date
@@ -12,17 +13,19 @@ class ElSpotError(Exception):
     pass
 
 
-def read_config(config_filename):
-    config_filename = str(Path(__file__).with_name(config_filename))
+# TODO: do it better with Path!!!!
 
-    if not Path(config_filename).exists():
+def read_config(config_filename: str) -> SimpleNamespace:
+    config_filename = Path(__file__).with_name(config_filename)
+
+    if not config_filename.exists():
         raise ElSpotError(f'Could not find config file: {config_filename}')
 
     with open(config_filename) as fh:
         return json.loads(fh.read(), object_hook=lambda d: SimpleNamespace(**d))
 
 
-def setup_logger(level, filename):
+def setup_logger(level: str, filename: str) -> logging.Logger:
     logging.basicConfig(filename=filename, format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
                         level=eval(f'logging.{level}'))
@@ -30,29 +33,32 @@ def setup_logger(level, filename):
     return logging.getLogger()
 
 
-def seconds_until_midnight():
+def seconds_until_midnight() -> int:
     tomorrow = datetime.now() + timedelta(1)
     midnight = datetime(year=tomorrow.year, month=tomorrow.month,
                         day=tomorrow.day, hour=0, minute=0, second=10)
     return int((midnight - datetime.now()).total_seconds())
 
 
-def save_csv(logger, filename, data: dict) -> None:
-    def saved_file_date(fname) -> date:
+# TODO: Save header only once ...!
+def save_csv(logger: logging.Logger, filename: str, data: dict) -> None:
+    def saved_file_date(fname: str) -> date:
         return datetime.fromtimestamp(int(Path(fname).stat().st_mtime)).date() if Path(
             fname).exists() else datetime.fromtimestamp(0).date()
 
+    def file_empty(filename: str) -> bool:
+        return Path(filename).stat().st_size == 0
+
     if datetime.now().date() == saved_file_date(filename):
         logger.error(f'-- save_csv: date already saved! {datetime.now().date()}')
-        return
+        # return
 
     with open(filename, WRITE_APPEND) as fh:
-        if not Path(filename).exists():
-            fh.write('date time weekday price\n')
-        sorted_by_hour = sorted(data.items(), key=lambda x: datetime.strptime(x[0], "%Y-%m-%d %H:%M"))
+        hdr = ['date', 'weekday', 'price']
+        writer = csv.DictWriter(fh, fieldnames=hdr)
+        writer.writeheader()
 
-        for d in sorted_by_hour:
-            the_date, price = d
+        for item in data.items():
+            the_date, price = item
             weekday = datetime.strptime(the_date, "%Y-%m-%d %H:%M").weekday()
-            the_string = f'{the_date} {str(weekday)} ' + price.replace('.', ',') + '\n'
-            fh.write(the_string)
+            writer.writerow({'date': the_date, 'weekday': weekday, 'price': price})

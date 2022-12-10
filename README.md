@@ -1,5 +1,5 @@
 # General
 
-Get information electricity prices for every hour the current day.
-
-Add some documentation !
+Get information about electricity prices for every hour the current day
+and save in a json file. it will also be saved in comma separated
+file, accumaltive.

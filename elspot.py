@@ -18,6 +18,10 @@ def main(mock_scraper=None, config_filename=CONFIG_FILE_NAME):
     config = read_config(config_filename=config_filename)
     logger = setup_logger(config.loglevel, config.log_filename)
 
+    if sys.version_info < (3, 7):
+        logger.error('Need to be python 3.7 or later ...')
+        return ERROR
+
     scraper = mock_scraper or Scraper(logging=logger)
     sleep_controller = SleepController(config)
     elspot_parser = ElSpotHTMLParser(logger)
@@ -25,13 +29,13 @@ def main(mock_scraper=None, config_filename=CONFIG_FILE_NAME):
     time_to_sleep = 0
     while True:
         try:
-            time_to_sleep = sleep_controller.current_backoff()
-            data = scraper.get_data()
+            time_to_sleep: int = sleep_controller.current_backoff()
+            data: str = scraper.get_data()
             elspot_parser.feed(data)
-            el_prices = elspot_parser.get_elprices()
+            el_prices: dict = elspot_parser.get_elprices()
             repo.save(el_prices)
         except (ElSpotCommError, ElSpotDataError, ElSpotError) as e:
-            logger.debug(f'-- failure , will backoff {str(time_to_sleep)} seconds{str(e)}')
+            logger.debug(f'-- failure , will backoff {time_to_sleep} seconds{str(e)}')
             del data
 
         except KeyboardInterrupt:
@@ -43,7 +47,7 @@ def main(mock_scraper=None, config_filename=CONFIG_FILE_NAME):
 
         if datetime.now().date() <= repo.saved_file_date():
             logger.debug('-- success, file saved')
-            time_to_sleep = 0 if mock_scraper else seconds_until_midnight()
+            time_to_sleep: int = 0 if mock_scraper else seconds_until_midnight()
             sleep_controller.reset()
             save_csv(logger, config.csv_filename, el_prices)
 
