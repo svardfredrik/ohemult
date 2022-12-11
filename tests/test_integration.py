@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from elspot import main, ERROR
+from elspot import main
+from elspot_helper import ERROR
 
 DATA = f"""
  <!doctype html>

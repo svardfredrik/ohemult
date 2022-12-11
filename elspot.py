@@ -3,15 +3,12 @@ import sys
 import time
 from datetime import datetime, timedelta
 
-from elspot_helper import ElSpotError, setup_logger, read_config, seconds_until_midnight, save_csv, CONFIG_FILE_NAME
+from elspot_helper import ElSpotError, setup_logger, read_config, seconds_until_midnight, save_csv, CONFIG_FILE_NAME, \
+    ERROR
 from parser import ElSpotHTMLParser, ElSpotDataError
 from repo import Repo
 from scraper import Scraper, ElSpotCommError
 from sleep_controller import SleepController
-
-# The config file path is a file with the following name in the same directory as this script itself
-
-ERROR = 42
 
 
 def main(mock_scraper=None, config_filename=CONFIG_FILE_NAME):

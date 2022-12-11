@@ -6,19 +6,15 @@ from pathlib import Path
 from types import SimpleNamespace
 
 WRITE_APPEND = "a"
-CONFIG_FILE_NAME = 'elspot_config.json'
+CONFIG_FILE_NAME = './elspot_config.json'
 
 
 class ElSpotError(Exception):
     pass
 
 
-# TODO: do it better with Path!!!!
-
 def read_config(config_filename: str) -> SimpleNamespace:
-    config_filename = Path(__file__).with_name(config_filename)
-
-    if not config_filename.exists():
+    if not Path(config_filename).exists():
         raise ElSpotError(f'Could not find config file: {config_filename}')
 
     with open(config_filename) as fh:
@@ -40,14 +36,10 @@ def seconds_until_midnight() -> int:
     return int((midnight - datetime.now()).total_seconds())
 
 
-# TODO: Save header only once ...!
 def save_csv(logger: logging.Logger, filename: str, data: dict) -> None:
     def saved_file_date(fname: str) -> date:
         return datetime.fromtimestamp(int(Path(fname).stat().st_mtime)).date() if Path(
             fname).exists() else datetime.fromtimestamp(0).date()
-
-    def file_empty(filename: str) -> bool:
-        return Path(filename).stat().st_size == 0
 
     if datetime.now().date() == saved_file_date(filename):
         logger.error(f'-- save_csv: date already saved! {datetime.now().date()}')
@@ -62,3 +54,6 @@ def save_csv(logger: logging.Logger, filename: str, data: dict) -> None:
             the_date, price = item
             weekday = datetime.strptime(the_date, "%Y-%m-%d %H:%M").weekday()
             writer.writerow({'date': the_date, 'weekday': weekday, 'price': price})
+
+
+ERROR = 42
